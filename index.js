@@ -21,7 +21,6 @@ connectDB();
 // ✅ Load Commands
 client.commands = new Collection();
 const commandFiles = fs.readdirSync(path.join(__dirname, "commands")).filter(file => file.endsWith(".js"));
-
 for (const file of commandFiles) {
     const command = require(`./commands/${file}`);
     client.commands.set(command.name, command);
@@ -112,7 +111,7 @@ client.on("messageCreate", async (message) => {
 
         lootboxes = level * 2;
         cashReward = level * 10000;
-        currency.updateBalance(userId, cashReward);
+        await currency.updateBalance(userId, cashReward);
 
         if (!userData.inventory) userData.inventory = {};
         userData.inventory.lootbox = (userData.inventory.lootbox || 0) + lootboxes;
@@ -135,7 +134,7 @@ client.on("messageCreate", async (message) => {
     command.execute(message, args);
 });
 
-// 🔹 Slash Commands
+// 🔹 Slash Command Handler
 client.on("interactionCreate", async (interaction) => {
     if (!interaction.isCommand()) return;
     const command = client.commands.get(interaction.commandName);
