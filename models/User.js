@@ -6,11 +6,12 @@ const userSchema = new mongoose.Schema({
     level: { type: Number, default: 1 },
     dailyXp: { type: Number, default: 0 },
     lastXpReset: { type: Number, default: Date.now },
+    balance: { type: Number, default: 0 },
     inventory: {
         lootbox: { type: Number, default: 0 },
-        // Add more items as needed
+        // add more items later
     },
-    // Add other fields like scraps, autominer, etc. later
+    // add autominer, scraps, etc. later
 });
 
 module.exports = mongoose.model("User", userSchema);
