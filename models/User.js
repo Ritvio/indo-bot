@@ -8,7 +8,7 @@ const userSchema = new mongoose.Schema({
     inventory: { type: Object, default: {} },
     lastXpReset: { type: Date, default: Date.now },
     dailyXp: { type: Number, default: 0 },
-    lastDaily: { type: Number, default: 0 } // ✅ This line is important
+    lastDaily: { type: String, default: null }  // ✅ This line is important
 });
 
 module.exports = mongoose.model("User", userSchema);
