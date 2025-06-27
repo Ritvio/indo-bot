@@ -1,6 +1,12 @@
 const { updateBalance } = require("../utils/currency");
 const User = require("../models/User");
 
+function getTodayDateIST() {
+    const now = new Date();
+    now.setUTCHours(now.getUTCHours() + 5.5); // Convert to IST
+    return now.toISOString().split("T")[0];   // Get "YYYY-MM-DD"
+}
+
 module.exports = {
     name: "daily",
     async execute(message) {
@@ -11,18 +17,16 @@ module.exports = {
             user = await User.create({ userId });
         }
 
-        const now = Date.now();
-        const oneDay = 24 * 60 * 60 * 1000;
+        const today = getTodayDateIST();
 
-        if (user.lastDaily && now - user.lastDaily < oneDay) {
-            const nextClaim = new Date(user.lastDaily + oneDay);
-            return message.reply(`⏳ You already claimed your daily reward!\nCome back <t:${Math.floor(nextClaim / 1000)}:R>.`);
+        if (user.lastDaily === today) {
+            return message.reply("⏳ You've already claimed your daily reward today!\nCome back after midnight (IST).");
         }
 
-        // Grant reward
+        // ✅ Grant reward
         const reward = 1000;
         await updateBalance(userId, reward);
-        user.lastDaily = now;
+        user.lastDaily = today;
         await user.save();
 
         message.channel.send(`🎉 You claimed your **daily reward** of **${reward.toLocaleString()}** <:indo_cash:1337749441289129994>!`);
