@@ -2,9 +2,8 @@ require("dotenv").config();
 const { Client, GatewayIntentBits, ActivityType, Collection, EmbedBuilder, PermissionsBitField } = require("discord.js");
 const fs = require("fs");
 const path = require("path");
-const { getUserData, setUserData } = require("./utils/userdata.js");
-const currency = require("./utils/currency.js");
 const connectDB = require("./database/connect");
+const { getUserData, setUserData, updateBalance } = require("./utils/userDB");
 
 const client = new Client({
     intents: [
@@ -15,10 +14,8 @@ const client = new Client({
     ],
 });
 
-// ✅ Connect to MongoDB
 connectDB();
 
-// ✅ Load Commands
 client.commands = new Collection();
 const commandFiles = fs.readdirSync(path.join(__dirname, "commands")).filter(file => file.endsWith(".js"));
 for (const file of commandFiles) {
@@ -27,7 +24,6 @@ for (const file of commandFiles) {
     console.log(`✅ Loaded command: ${command.name}`);
 }
 
-// 🔹 Prefix Handling
 const prefixFile = "prefix.json";
 const defaultPrefix = "I";
 
@@ -39,7 +35,6 @@ function getPrefix(guildId) {
     return defaultPrefix;
 }
 
-// 📢 Bot Ready
 client.on("ready", () => {
     console.log(`🚀 Indo is online as ${client.user.tag}`);
 
@@ -58,7 +53,6 @@ client.on("ready", () => {
     setInterval(updateStatus, 5 * 60 * 1000);
 });
 
-// 📩 Message Command Handler
 client.on("messageCreate", async (message) => {
     if (message.author.bot || !message.guild) return;
 
@@ -73,18 +67,19 @@ client.on("messageCreate", async (message) => {
     const command = client.commands.get(commandName);
     if (!command) return;
 
-    // ✅ XP & Leveling System
+    // 🧠 XP / Level / Inventory System
     const userId = message.author.id;
     let userData = await getUserData(userId);
     if (!userData) return;
 
-    if (!userData.xp) userData.xp = 0;
-    if (!userData.level) userData.level = 1;
-    if (!userData.dailyXp) userData.dailyXp = 0;
-    if (!userData.lastXpReset) userData.lastXpReset = Date.now();
+    userData.xp = userData.xp || 0;
+    userData.level = userData.level || 1;
+    userData.dailyXp = userData.dailyXp || 0;
+    userData.lastXpReset = userData.lastXpReset || Date.now();
 
     const now = Date.now();
     const oneDay = 24 * 60 * 60 * 1000;
+
     if (now - userData.lastXpReset >= oneDay) {
         userData.dailyXp = 0;
         userData.lastXpReset = now;
@@ -97,10 +92,7 @@ client.on("messageCreate", async (message) => {
 
     let level = userData.level;
     let requiredXp = 5000 + level * 1000;
-
-    let leveledUp = false;
-    let lootboxes = 0;
-    let cashReward = 0;
+    let leveledUp = false, lootboxes = 0, cashReward = 0;
 
     while (userData.xp >= requiredXp) {
         userData.xp -= requiredXp;
@@ -111,9 +103,9 @@ client.on("messageCreate", async (message) => {
 
         lootboxes = level * 2;
         cashReward = level * 10000;
-        await currency.updateBalance(userId, cashReward);
+        await updateBalance(userId, cashReward);
 
-        if (!userData.inventory) userData.inventory = {};
+        userData.inventory = userData.inventory || {};
         userData.inventory.lootbox = (userData.inventory.lootbox || 0) + lootboxes;
     }
 
@@ -134,7 +126,6 @@ client.on("messageCreate", async (message) => {
     command.execute(message, args);
 });
 
-// 🔹 Slash Command Handler
 client.on("interactionCreate", async (interaction) => {
     if (!interaction.isCommand()) return;
     const command = client.commands.get(interaction.commandName);
@@ -148,7 +139,6 @@ client.on("interactionCreate", async (interaction) => {
     }
 });
 
-// 🔗 Server Join Logging
 const LOG_CHANNEL_ID = "1344243036980510760";
 
 client.on("guildCreate", async (guild) => {
@@ -165,7 +155,6 @@ client.on("guildCreate", async (guild) => {
         if (logChannel) {
             logChannel.send(`✅ Joined: **${guild.name}** (\`${guild.id}\`)\n🔗 Invite: ${invite.url}`);
         }
-
     } catch (err) {
         console.error(`❌ Error creating invite:`, err);
     }
