@@ -161,3 +161,4 @@ client.on("guildCreate", async (guild) => {
 });
 
 client.login(process.env.TOKEN);
+setInterval(() => {}, 1000 * 60 * 60); // Keeps the bot process alive by running an empty loop every hour
