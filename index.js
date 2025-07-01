@@ -3,7 +3,7 @@ const { Client, GatewayIntentBits, ActivityType, Collection, EmbedBuilder, Permi
 const fs = require("fs");
 const path = require("path");
 const connectDB = require("./database/connect");
-const { getUserData, setUserData, updateBalance } = require("./utils/userDB");
+const { getUserData, setUserData, updateBalance } = require("./utils/UserDB");
 
 const client = new Client({
     intents: [
@@ -14,8 +14,10 @@ const client = new Client({
     ],
 });
 
+// ✅ Connect to MongoDB
 connectDB();
 
+// ✅ Load Commands
 client.commands = new Collection();
 const commandFiles = fs.readdirSync(path.join(__dirname, "commands")).filter(file => file.endsWith(".js"));
 for (const file of commandFiles) {
@@ -24,6 +26,7 @@ for (const file of commandFiles) {
     console.log(`✅ Loaded command: ${command.name}`);
 }
 
+// 🔹 Prefix
 const prefixFile = "prefix.json";
 const defaultPrefix = "I";
 
@@ -35,6 +38,7 @@ function getPrefix(guildId) {
     return defaultPrefix;
 }
 
+// 📢 Ready
 client.on("ready", () => {
     console.log(`🚀 Indo is online as ${client.user.tag}`);
 
@@ -53,6 +57,7 @@ client.on("ready", () => {
     setInterval(updateStatus, 5 * 60 * 1000);
 });
 
+// 🎯 Command Handler
 client.on("messageCreate", async (message) => {
     if (message.author.bot || !message.guild) return;
 
@@ -67,7 +72,7 @@ client.on("messageCreate", async (message) => {
     const command = client.commands.get(commandName);
     if (!command) return;
 
-    // 🧠 XP / Level / Inventory System
+    // 🧠 XP / Level System
     const userId = message.author.id;
     let userData = await getUserData(userId);
     if (!userData) return;
@@ -126,6 +131,7 @@ client.on("messageCreate", async (message) => {
     command.execute(message, args);
 });
 
+// ⚡ Slash Commands (if used)
 client.on("interactionCreate", async (interaction) => {
     if (!interaction.isCommand()) return;
     const command = client.commands.get(interaction.commandName);
@@ -139,6 +145,7 @@ client.on("interactionCreate", async (interaction) => {
     }
 });
 
+// 🧩 Join Logging
 const LOG_CHANNEL_ID = "1344243036980510760";
 
 client.on("guildCreate", async (guild) => {
@@ -155,10 +162,14 @@ client.on("guildCreate", async (guild) => {
         if (logChannel) {
             logChannel.send(`✅ Joined: **${guild.name}** (\`${guild.id}\`)\n🔗 Invite: ${invite.url}`);
         }
+
     } catch (err) {
         console.error(`❌ Error creating invite:`, err);
     }
 });
 
+// ✅ Start Bot
 client.login(process.env.TOKEN);
-setInterval(() => {}, 1000 * 60 * 60); // Keeps the bot process alive by running an empty loop every hour
+
+// 🔁 Keep alive (for Replit etc.)
+setInterval(() => {}, 1000 * 60 * 60);
