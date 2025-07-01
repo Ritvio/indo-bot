@@ -3,7 +3,7 @@ const { Client, GatewayIntentBits, ActivityType, Collection, EmbedBuilder, Permi
 const fs = require("fs");
 const path = require("path");
 const connectDB = require("./database/connect");
-const { getUserData, setUserData, updateBalance } = require("./utils/UserDB");
+const { getUserData, setUserData, updateBalance } = require("./utils/userDB");
 
 const client = new Client({
     intents: [
